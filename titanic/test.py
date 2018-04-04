@@ -66,7 +66,12 @@ def logistic_reg(train_X, train_Y, test_X, PassengerId):
     plt.show()
 
 
-
+def classify_func(classifier, train_X, train_Y, test_X, PassengerId):
+    for name, clf in classifier.items():
+        clf.fit(train_X, train_Y)
+        predictions = clf.predict(test_X)
+        Submission = pd.DataFrame({'PassengerId': PassengerId, 'Survived': predictions})
+        Submission.to_csv(name + 'Submission.csv', index=False, sep=',')
 
 
 def test_main():
@@ -158,11 +163,18 @@ def test_main():
     svm = SVC(kernel='linear', C=0.025)
 
     lr = LogisticRegression()
+
+    classifier = {'RF': rf, 'ADA': ada, 'Extra Trees': et, 'GradientBoosting': gb, 'Decision Tree': dt,
+                  'KNeighbors': knn, 'SVC': svm, 'LR': lr}
+
+
     # 将pandas转换为arrays：
     # Create Numpy arrays of train, test and target (Survived) dataframes to feed into our models
     x_train = titanic_train_data_X.values  # Creates an array of the train data
     x_test = titanic_test_data_X.values  # Creats an array of the test data
     y_train = titanic_train_data_Y.values
+
+    classify_func(classifier, x_train, y_train, x_test, PassengerId)
 
     # Create our OOF train and test predictions. These base results will be used as new features
     rf_oof_train, rf_oof_test = get_out_fold(rf, x_train, y_train, x_test)  # Random Forest

@@ -13,13 +13,13 @@
 __author__ = 'xpzhao'
 
 import re
+import warnings
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import preprocessing
-
-import warnings
 
 warnings.filterwarnings('ignore')
 
@@ -401,7 +401,6 @@ def show_feature():
 
 
 # 建立Age的预测模型，我们可以多模型预测，然后再做模型的融合，提高预测的精度。
-from sklearn import ensemble
 from sklearn import model_selection
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -650,6 +649,13 @@ def feature_eng():
     # 26    30.000675
     # Name: Age, dtype: float64
 
+    # 按照年龄，将乘客划分为儿童、少年、成年和老年，分析四个群体的生还情况：
+    bins = [0, 12, 18, 65, 100]
+    combined_train_test['Age_group'] = pd.cut(combined_train_test['Age'], bins)
+    Age_group_dummies_df = pd.get_dummies(combined_train_test['Age_group'],
+                                          prefix='Age_group')
+    combined_train_test = pd.concat([combined_train_test, Age_group_dummies_df], axis=1)
+
     # (8) Ticket
     #
     # 观察Ticket的值，我们可以看到，Ticket有字母和数字之分，
@@ -700,9 +706,9 @@ def feature_eng():
     # 1. 一些数据的正则化
     #
     # 这里我们将Age和fare进行正则化：
-    scale_age_fare = preprocessing.StandardScaler().fit(combined_train_test[['Age', 'Fare', 'Name_length']])
-    combined_train_test[['Age', 'Fare', 'Name_length']] = scale_age_fare.transform(
-        combined_train_test[['Age', 'Fare', 'Name_length']])
+    scale_age_fare = preprocessing.StandardScaler().fit(combined_train_test[['Fare', 'Name_length']])
+    combined_train_test[['Fare', 'Name_length']] = scale_age_fare.transform(
+        combined_train_test[['Fare', 'Name_length']])
 
     # 2. 弃掉无用特征
     #
@@ -712,7 +718,8 @@ def feature_eng():
     # 首先对我们的数据先进行一下备份，以便后期的再次分析
     combined_data_backup = combined_train_test
     combined_train_test.drop(['PassengerId', 'Embarked', 'Sex', 'Name', 'Title', 'Fare_bin_id', 'Pclass_Fare_Category',
-                              'Parch', 'SibSp', 'Family_Size_Category', 'Ticket'], axis=1, inplace=True)
+                              'Parch', 'SibSp', 'Family_Size_Category', 'Ticket', 'Age', 'Age_group'], axis=1,
+                             inplace=True)
 
     # 3. 将训练数据和测试数据分开：
     train_data = combined_train_test[:891]

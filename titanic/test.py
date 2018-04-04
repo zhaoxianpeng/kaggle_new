@@ -12,15 +12,17 @@
 """
 __author__ = 'xpzhao'
 
-from titanic import feature
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model.logistic import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
+
+from titanic import feature
 
 
 def get_out_fold(clf, x_train, y_train, x_test):
@@ -48,8 +50,39 @@ def get_out_fold(clf, x_train, y_train, x_test):
     return oof_train.reshape(-1, 1), oof_test.reshape(-1, 1)
 
 
+def logistic_reg(train_X, train_Y, test_X, PassengerId):
+    # LR
+
+    lr = LogisticRegression()
+    lr.fit(train_X, train_Y)
+
+    predictions = lr.predict(test_X)
+    StackingSubmission = pd.DataFrame({'PassengerId': PassengerId, 'Survived': predictions})
+    StackingSubmission.to_csv('LRSubmission.csv', index=False, sep=',')
+
+    title = "Learning Curves"
+    plot_learning_curve(LogisticRegression(tol=0.0000001), title, train_X, train_Y, cv=None, n_jobs=4,
+                        train_sizes=[50, 100, 150, 200, 250, 350, 400, 450, 500])
+    plt.show()
+
+
+
+
+
 def test_main():
     titanic_train_data_X, titanic_train_data_Y, titanic_test_data_X, PassengerId = feature.feature_eng()
+
+    if 0:
+        print(titanic_train_data_X)
+        # 将pandas转换为arrays：
+        # Create Numpy arrays of train, test and target (Survived) dataframes to feed into our models
+        x_train = titanic_train_data_X.values  # Creates an array of the train data
+        x_test = titanic_test_data_X.values  # Creats an array of the test data
+        y_train = titanic_train_data_Y.values
+        logistic_reg(x_train, y_train, x_test, PassengerId)
+        return;
+
+
     # 模型融合及测试
     #
     # 模型融合的过程需要分几步来进行。
@@ -123,6 +156,8 @@ def test_main():
     knn = KNeighborsClassifier(n_neighbors=2)
 
     svm = SVC(kernel='linear', C=0.025)
+
+    lr = LogisticRegression()
     # 将pandas转换为arrays：
     # Create Numpy arrays of train, test and target (Survived) dataframes to feed into our models
     x_train = titanic_train_data_X.values  # Creates an array of the train data
@@ -137,6 +172,7 @@ def test_main():
     dt_oof_train, dt_oof_test = get_out_fold(dt, x_train, y_train, x_test)  # Decision Tree
     knn_oof_train, knn_oof_test = get_out_fold(knn, x_train, y_train, x_test)  # KNeighbors
     svm_oof_train, svm_oof_test = get_out_fold(svm, x_train, y_train, x_test)  # Support Vector
+    lr_oof_train, lr_oof_test = get_out_fold(lr, x_train, y_train, x_test)  # Support Vector
 
     print("Training is complete")
 
@@ -146,9 +182,11 @@ def test_main():
     #
     # 我们利用XGBoost，使用第一层预测的结果作为特征对最终的结果进行预测。
     x_train = np.concatenate(
-        (rf_oof_train, ada_oof_train, et_oof_train, gb_oof_train, dt_oof_train, knn_oof_train, svm_oof_train), axis=1)
+        (rf_oof_train, ada_oof_train, et_oof_train, gb_oof_train, dt_oof_train, knn_oof_train, svm_oof_train,
+         lr_oof_train), axis=1)
     x_test = np.concatenate(
-        (rf_oof_test, ada_oof_test, et_oof_test, gb_oof_test, dt_oof_test, knn_oof_test, svm_oof_test), axis=1)
+        (rf_oof_test, ada_oof_test, et_oof_test, gb_oof_test, dt_oof_test, knn_oof_test, svm_oof_test, lr_oof_test),
+        axis=1)
 
     from xgboost import XGBClassifier
 

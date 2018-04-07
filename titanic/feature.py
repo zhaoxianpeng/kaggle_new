@@ -20,8 +20,18 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn import preprocessing
+from matplotlib.font_manager import *
 
 warnings.filterwarnings('ignore')
+
+
+#plt.rcParams['font.sans-serif']=['SimHei'] #用来正常显示中文标签
+# plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+
+#定义自定义字体，文件名从1.b查看系统中文字体中来
+myfont = FontProperties(fname='/usr/share/fonts/TTF/DroidSansFallback.ttf')
+#解决负号'-'显示为方块的问题
+matplotlib.rcParams['axes.unicode_minus']=False
 
 
 def show_feature():
@@ -34,10 +44,10 @@ def show_feature():
     print(train_data.info())
     print("-" * 40)
     print(test_data.info())
-    # 绘制存活的比例：
 
+    # 绘制存活的比例：
     train_data['Survived'].value_counts().plot.pie(autopct='%1.2f%%')
-    # plt.show()
+    plt.title(u'存活比例', fontproperties=myfont)
 
     # Embarked这一属性（共有三个上船地点），缺失俩值，可以用众数赋值
     train_data.Embarked[train_data.Embarked.isnull()] = train_data.Embarked.dropna().mode().values
@@ -71,15 +81,18 @@ def show_feature():
     #
     print(train_data.groupby(['Sex', 'Survived'])['Survived'].count())
     train_data[['Sex', 'Survived']].groupby(['Sex']).mean().plot.bar()
+    plt.title(u'性别与是否生存的关系', fontproperties=myfont)
 
     # 船舱等级和生存与否的关系 Pclass
     #
     print(train_data.groupby(['Pclass', 'Survived'])['Pclass'].count())
     train_data[['Pclass', 'Survived']].groupby(['Pclass']).mean().plot.bar()
+    plt.title(u'船舱等级和生存与否的关系 ', fontproperties=myfont)
 
     # 不同等级船舱的男女生存率：
     print(train_data.groupby(['Sex', 'Pclass', 'Survived'])['Survived'].count())
     train_data[['Sex', 'Pclass', 'Survived']].groupby(['Pclass', 'Sex']).mean().plot.bar()
+    plt.title(u'不同等级船舱的男女生存率', fontproperties=myfont)
     # 从图和表中可以看出，总体上泰坦尼克号逃生是妇女优先，但是对于不同等级的船舱还是有一定的区别。
 
     # 年龄与存活与否的关系 Age
@@ -87,11 +100,11 @@ def show_feature():
     # 分别分析不同等级船舱和不同性别下的年龄分布和生存的关系：
     fig, ax = plt.subplots(1, 2, figsize=(18, 8))
     sns.violinplot("Pclass", "Age", hue="Survived", data=train_data, split=True, ax=ax[0])
-    ax[0].set_title('Pclass and Age vs Survived')
+    ax[0].set_title(u'不同等级船舱下的年龄分布和生存的关系', fontproperties=myfont)
     ax[0].set_yticks(range(0, 110, 10))
 
     sns.violinplot("Sex", "Age", hue="Survived", data=train_data, split=True, ax=ax[1])
-    ax[1].set_title('Sex and Age vs Survived')
+    ax[1].set_title(u'不同性别下的年龄分布和生存的关系', fontproperties=myfont)
     ax[1].set_yticks(range(0, 110, 10))
 
     # 分析总体的年龄分布：
@@ -103,12 +116,14 @@ def show_feature():
 
     plt.subplot(122)
     train_data.boxplot(column='Age', showfliers=False)
+    plt.title(u'年龄的分布情况', fontproperties=myfont)
 
     # 不同年龄下的生存和非生存的分布情况
     facet = sns.FacetGrid(train_data, hue="Survived", aspect=4)
     facet.map(sns.kdeplot, 'Age', shade=True)
     facet.set(xlim=(0, train_data['Age'].max()))
     facet.add_legend()
+    plt.title(u'不同年龄下的生存和非生存的分布情况', fontproperties=myfont)
 
     # 不同年龄下的平均生存率：
     # average survived passengers by age
@@ -116,7 +131,9 @@ def show_feature():
     train_data["Age_int"] = train_data["Age"].astype(int)
     average_age = train_data[["Age_int", "Survived"]].groupby(['Age_int'], as_index=False).mean()
     sns.barplot(x='Age_int', y='Survived', data=average_age)
+    plt.title(u'不同年龄下的平均生存率', fontproperties=myfont)
     plt.show()
+
     print(train_data['Age'].describe())
     # count    891.000000
     #  mean      29.668231
@@ -141,6 +158,7 @@ def show_feature():
     # (65, 100]    0.125000
     # Name: Survived, dtype: float64
     by_age.plot(kind='bar')
+    plt.title(u'不同Age group下的平均生存率', fontproperties=myfont)
 
     # 通过观察名字数据，我们可以看出其中包括对乘客的称呼，
     # 如：Mr、Miss、Mrs等，称呼信息包含了乘客的年龄、性别，
@@ -170,11 +188,13 @@ def show_feature():
     # 观察不同称呼与生存率的关系：
     #
     train_data[['Title', 'Survived']].groupby(['Title']).mean().plot.bar()
+    plt.title(u'不同称呼与生存率的关系', fontproperties=myfont)
     # 同时，对于名字，我们还可以观察名字长度和生存率之间存在关系的可能：
     fig, axis1 = plt.subplots(1, 1, figsize=(18, 4))
     train_data['Name_length'] = train_data['Name'].apply(len)
     name_length = train_data[['Name_length', 'Survived']].groupby(['Name_length'], as_index=False).mean()
     sns.barplot(x='Name_length', y='Survived', data=name_length)
+    plt.title(u'名字长度与生存率之间的关系', fontproperties=myfont)
 
     # 有无兄弟姐妹和存活与否的关系 SibSp
     # 将数据分为有兄弟姐妹的和没有兄弟姐妹的两组：
@@ -185,10 +205,12 @@ def show_feature():
     plt.subplot(121)
     sibsp_df['Survived'].value_counts().plot.pie(labels=['No Survived', 'Survived'], autopct='%1.1f%%')
     plt.xlabel('sibsp')
+    plt.title(u'有兄弟姐妹的生存状况', fontproperties=myfont)
 
     plt.subplot(122)
     no_sibsp_df['Survived'].value_counts().plot.pie(labels=['No Survived', 'Survived'], autopct='%1.1f%%')
     plt.xlabel('no_sibsp')
+    plt.title(u'无兄弟姐妹的生存状况', fontproperties=myfont)
 
     # plt.show()
 
@@ -201,22 +223,25 @@ def show_feature():
     plt.subplot(121)
     parch_df['Survived'].value_counts().plot.pie(labels=['No Survived', 'Survived'], autopct='%1.1f%%')
     plt.xlabel('parch')
+    plt.title(u'有父母子女的生存状况', fontproperties=myfont)
 
     plt.subplot(122)
     no_parch_df['Survived'].value_counts().plot.pie(labels=['No Survived', 'Survived'], autopct='%1.1f%%')
     plt.xlabel('no_parch')
+    plt.title(u'无父母子女的生存状况', fontproperties=myfont)
 
     # plt.show()
 
     # 亲友的人数和存活与否的关系 SibSp & Parch
     fig, ax = plt.subplots(1, 2, figsize=(18, 8))
     train_data[['Parch', 'Survived']].groupby(['Parch']).mean().plot.bar(ax=ax[0])
-    ax[0].set_title('Parch and Survived')
+    ax[0].set_title(u'父母子女个数与生存关系', fontproperties=myfont)
     train_data[['SibSp', 'Survived']].groupby(['SibSp']).mean().plot.bar(ax=ax[1])
-    ax[1].set_title('SibSp and Survived')
+    ax[1].set_title(u'兄弟姐妹个数与生存关系', fontproperties=myfont)
 
     train_data['Family_Size'] = train_data['Parch'] + train_data['SibSp'] + 1
     train_data[['Family_Size', 'Survived']].groupby(['Family_Size']).mean().plot.bar()
+    plt.title(u'家庭大小与生存关系', fontproperties=myfont)
     # 从图表中可以看出，若独自一人，那么其存活率比较低；但是如果亲友太多的话，存活率也会很低。
 
     # 票价分布和存活与否的关系  Fare
@@ -224,8 +249,10 @@ def show_feature():
     # 首先绘制票价的分布情况：
     plt.figure(figsize=(10, 5))
     train_data['Fare'].hist(bins=70)
+    plt.title(u'票价的分布情况', fontproperties=myfont)
 
     train_data.boxplot(column='Fare', by='Pclass', showfliers=False)
+    plt.title(u'不同船舱票价的分布情况', fontproperties=myfont)
     # plt.show()
     print(train_data['Fare'].describe())
     # count    891.000000
@@ -245,6 +272,9 @@ def show_feature():
     average_fare = pd.DataFrame([fare_not_survived.mean(), fare_survived.mean()])
     std_fare = pd.DataFrame([fare_not_survived.std(), fare_survived.std()])
     average_fare.plot(yerr=std_fare, kind='bar', legend=False)
+    plt.xlabel(u'是否生存', fontproperties=myfont)
+    plt.ylabel(u'票价方差标准差', fontproperties=myfont)
+    plt.title(u'生存与否与票价均值和方差的关系', fontproperties=myfont)
     # 由上图标可知，票价与是否生还有一定的相关性，生还者的平均票价要大于未生还者的平均票价。
 
     #  船舱类型和存活与否的关系  Cabin
@@ -258,6 +288,7 @@ def show_feature():
     train_data.loc[train_data.Cabin.isnull(), 'Cabin'] = 'U0'
     train_data['Has_Cabin'] = train_data['Cabin'].apply(lambda x: 0 if x == 'U0' else 1)
     train_data[['Has_Cabin', 'Survived']].groupby(['Has_Cabin']).mean().plot.bar()
+    plt.title(u'有无船舱与生存的关系', fontproperties=myfont)
 
     # 对不同类型的船舱进行分析：
     # create feature for the alphabetical part of the cabin number
@@ -265,15 +296,16 @@ def show_feature():
     # convert the distinct cabin letters with incremental integer values
     train_data['CabinLetter'] = pd.factorize(train_data['CabinLetter'])[0]
     train_data[['CabinLetter', 'Survived']].groupby(['CabinLetter']).mean().plot.bar()
+    plt.title(u'船舱号与生存的关系', fontproperties=myfont)
     # 可见，不同的船舱生存率也有不同，但是差别不大。所以在处理中，我们可以直接将特征删除。
 
     # 港口和存活与否的关系  Embarked
     # 泰坦尼克号从英国的南安普顿港出发，途径法国瑟堡和爱尔兰昆士敦，
     # 那么在昆士敦之前上船的人，有可能在瑟堡或昆士敦下船，这些人将不会遇到海难。
     sns.countplot('Embarked', hue='Survived', data=train_data)
-    plt.title('Embarked and Survived')
+    plt.title(u'上船港口与生存人员个数关系', fontproperties=myfont)
     sns.factorplot('Embarked', 'Survived', data=train_data, size=3, aspect=2)
-    plt.title('Embarked and Survived rate')
+    plt.title(u'上船港口与生存比例关系', fontproperties=myfont)
     # 由上可以看出，在不同的港口上船，生还率不同，C最高，Q次之，S最低。
     plt.show()
 

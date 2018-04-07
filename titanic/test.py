@@ -75,6 +75,12 @@ def classify_func(classifier, train_X, train_Y, test_X, PassengerId):
 
 
 def test_main():
+
+    if 1:
+        feature.show_feature()
+        return;
+
+
     titanic_train_data_X, titanic_train_data_Y, titanic_test_data_X, PassengerId = feature.feature_eng()
 
     if 0:
